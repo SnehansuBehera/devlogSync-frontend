@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
   const token = req.cookies.get("accessToken")?.value || "";
   if (!code) {
-    return NextResponse.redirect(`http://localhost:3000/profile?error=OAuth failed`);
+    return NextResponse.redirect(`https://devlogsync.vercel.app/profile?error=OAuth failed`);
   }
 
   try {
@@ -60,9 +60,9 @@ export async function GET(req: NextRequest) {
       }
   });
 
-    return NextResponse.redirect(`http://localhost:3000/dashboard`);
+    return NextResponse.redirect(`https://devlogsync.vercel.app/dashboard`);
   } catch (error) {
     console.error("OAuth Callback Error:", error);
-    return NextResponse.redirect(`http://localhost:3000/profile?error=OAuth failed`);
+    return NextResponse.redirect(`https://devlogsync.vercel.app/profile?error=OAuth failed`);
   }
 }
