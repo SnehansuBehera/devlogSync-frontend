@@ -1,31 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Routes where authenticated users should NOT go (e.g. login, register)
-const publicRoutes = ["/", "/login", "/register"];
 
-export function middleware(req: NextRequest) {
+const protectedRoutes = ["/dashboard"];
+console.log(process.env.BACKEND_URI)
+const GET_USER_URL = `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/auth/getUser`;
+const REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/auth/refresh-token`;
+
+export async function middleware(req: NextRequest) {
+  const url = req.nextUrl.clone();
+  const pathname = url.pathname;
+
   const accessToken = req.cookies.get("accessToken")?.value;
-    console.log(accessToken);
-  const isPublic = publicRoutes.includes(req.nextUrl.pathname);
+  const refreshToken = req.cookies.get("refreshToken")?.value;
 
-  // ✅ If user is logged in and tries to visit login/register → redirect to dashboard
-  if (accessToken && isPublic) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  
+  const isProtected = protectedRoutes.includes(pathname);
+
+  if (accessToken) {
+    const userRes = await fetch(GET_USER_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (userRes.ok) {
+      if (pathname === "/login" || pathname === "/register") {
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+      return NextResponse.next();
+    }
   }
 
-  // ✅ If user is NOT logged in and tries to access a protected page → redirect to login
-  const protectedRoutes = ["/dashboard"];
-  const isProtected = protectedRoutes.includes(req.nextUrl.pathname);
+  if (refreshToken) {
+    const refreshRes = await fetch(REFRESH_TOKEN_URL, {
+      method: "GET",
+      headers: {
+        Cookie: `refreshToken=${refreshToken}`,
+      },
+    });
 
-  if (!accessToken && isProtected) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    if (refreshRes.ok) {
+      const refreshData = await refreshRes.json();
+      console.log(refreshData);
+
+      if (pathname === "/login" || pathname === "/register") {
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+
+      return NextResponse.next();
+    }
   }
 
-  // Allow request to proceed
+  if (isProtected) {
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
-// Apply middleware to all routes or selectively
 export const config = {
-  matcher: ["/", "/login", "/register", "/dashboard"], // add more if needed
+  matcher: ["/", "/login", "/register", "/dashboard"],
 };

@@ -1,9 +1,17 @@
 "use client";
 
+import About from "./components/About";
+import Footer from "./components/Footer";
+import StepsSection from "./components/Guide";
+import LandingPage from "./components/Home";
+
 export default function Home() {
   return (
-    <div className="">
-      <h1 className="font-bold text-amber-500">hello</h1>
+    <div>
+      <LandingPage />
+      <About />
+      <StepsSection />
+      <Footer />
     </div>
   );
 }

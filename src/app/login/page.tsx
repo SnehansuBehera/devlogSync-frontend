@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { useAppDispatch } from "@/store/hooks";
+import { authUser } from "@/store/thunks/userThunks";
 
 export default function SignupPage() {
   const [isLogin, setIsLogin] = useState(true);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -33,39 +36,28 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
 
+    const payload = isLogin
+      ? { email, password }
+      : { email, password, firstName, lastName, username };
+
     try {
-      const payload = isLogin
-        ? { email, password }
-        : { firstName, lastName, email, password, username };
+      const resultAction = await dispatch(authUser({ payload, isLogin }));
 
-      const endpoint = isLogin
-        ? "http://localhost:5000/api/auth/login"
-        : "http://localhost:5000/api/auth/register";
+      if (authUser.rejected.match(resultAction)) {
+        toast.error(resultAction.payload as string);
+        return;
+      }
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
-
-      const data = await res.json();
+      toast.success(isLogin ? "Login successful" : "Account created");
+      router.push("/dashboard");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setEmail("");
       setFirstName("");
       setLastName("");
       setPassword("");
       setUsername("");
-      if (!res.ok) {
-        toast.error(data.message || "Something went wrong");
-      } else {
-        toast.success(data.message);
-        localStorage.setItem("accessToken", data.user.accessToken);
-        router.push("/dashboard");
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      toast.error("Network error or server unavailable.");
-    } finally {
       setLoading(false);
     }
   };
@@ -75,11 +67,11 @@ export default function SignupPage() {
       <div className="flex flex-col justify-center px-6 py-10 sm:px-14 sm:py-16 md:px-24 lg:px-14 lg:py-12 ">
         <div className="mb-5 md:mb-8">
           <Image
-            src="/next.svg"
+            src="/logo-nav.png"
             alt="Logo"
             width={100}
-            height={24}
-            className=" mb-3 md:mb-4"
+            height={100}
+            className="w-10 h-10"
           />
           <h1 className="text-2xl sm:text-3xl font-semibold">
             {isLogin ? "Login to your account" : "Create a new account"}
@@ -96,25 +88,16 @@ export default function SignupPage() {
             className="flex items-center justify-center gap-2 border w-full py-2 rounded-md text-sm font-medium mb-3 md:mb-2 lg:mb-5"
           >
             <Image
-              src="/next.svg"
+              src="/google.png"
               alt="Google"
               width={50}
               height={50}
-              className="w-10 h-5"
-            />
-          </button>
-          <button className="flex items-center justify-center gap-2 border w-full py-2 rounded-md text-sm font-medium mb-3 md:mb-2 lg:mb-5">
-            <Image
-              src="/next.svg"
-              alt="Google"
-              width={50}
-              height={50}
-              className="w-10 h-5"
+              className="w-5 h-5"
             />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-gray-400 text-sm mb-3 md:mb-2 lg:mb-4">
+        <div className="flex items-center gap-2 text-gray-400 text-sm mb-3 md:mb-2">
           <div className="h-px bg-gray-200 flex-1" />
           or
           <div className="h-px bg-gray-200 flex-1" />
@@ -191,6 +174,14 @@ export default function SignupPage() {
               required
             />
           </div>
+          {isLogin && (
+            <p
+              onClick={() => router.push("/forgotPassword")}
+              className="text-blue-600 text-sm text-right cursor-pointer"
+            >
+              <span className="text-red-400">*</span> Forgot password
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 
 import "./globals.css";
+import Navbar from "./components/Navbar";
+import ReduxProvider from "./redux-provider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,9 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-zinc-100">
+        <Navbar />
         <Toaster position="top-center" reverseOrder={false} />
-        {children}
+        <ReduxProvider>{children}</ReduxProvider>
       </body>
     </html>
   );
