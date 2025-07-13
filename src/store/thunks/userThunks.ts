@@ -19,6 +19,9 @@ export const authUser = createAsyncThunk<User, AuthThunkArgs>(
       });
 
       const data = await res.json();
+      console.log("Login res status:", res.status);
+      console.log("Login response JSON:", data);
+
       if (!res.ok) return rejectWithValue(data.message || "Auth failed");
 
       return data.user as User;
