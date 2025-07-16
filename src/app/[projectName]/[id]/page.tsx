@@ -444,10 +444,7 @@ const Project = () => {
       <LinkRepositoryModal
         open={isRepoModalOpen}
         onClose={() => setIsRepoModalOpen(false)}
-        onSubmit={(repoUrl) => {
-          console.log("Submitted repo URL:", repoUrl);
-          toast.success("Repository linked successfully!");
-        }}
+        projectId={projectId}
       />
     </div>
   );
