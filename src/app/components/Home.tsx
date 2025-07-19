@@ -9,9 +9,7 @@ const LandingPage = () => {
   const router = useRouter();
   useEffect(() => {
     const checkAuth = () => {
-      const cookies = document.cookie.split("; ");
-      const tokenCookie = cookies.find((row) => row.startsWith("accessToken="));
-      const token = tokenCookie ? tokenCookie.split("=")[1] : null;
+      const token = localStorage.getItem("token");
       setAuthenticated(!!token);
     };
     checkAuth();

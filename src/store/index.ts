@@ -4,6 +4,7 @@ import { githubSlice } from "./slices/githubSlice";
 import summaryReducer from "./slices/summarySlice";
 import projectReducer from "./slices/projectSlices";
 import heatmapReducer from "./slices/dailyLogSlice";
+import logReducer from "./slices/logSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     summary: summaryReducer,
     project: projectReducer,
     heatmap: heatmapReducer,
+    stats: logReducer
   },
 });
 

@@ -13,8 +13,8 @@ import { MdEmail } from "react-icons/md";
 import { FaAt } from "react-icons/fa";
 import { MdVerifiedUser } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
-
-const tabs = ["Profile", "Working Hours", "Heat Map", "Commits", "Password"];
+import Logs from "./Logs";
+const tabs = ["Profile", "Logs", "Password"];
 interface UserData {
   user: {
     id: number;
@@ -345,7 +345,7 @@ export default function ProfileDashboard() {
 
           {/* Tabs */}
           <div className="mt-2 border-b border-gray-200">
-            <div className="flex space-x-2 text-xs sm:space-x-6 sm:text-sm">
+            <div className="flex space-x-10 md:space-x-6 text-xs sm:space-x-6 sm:text-sm">
               {tabs.map((tab, index) => (
                 <button
                   key={index}
@@ -478,7 +478,8 @@ export default function ProfileDashboard() {
               )}
             </div>
           )}
-          {selectedTab === 4 && (
+          {selectedTab === 1 && <Logs />}
+          {selectedTab === 2 && (
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-2">
                 {data?.user.password ? "Reset Password" : "Set Password"}
