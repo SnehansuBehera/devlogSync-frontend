@@ -43,6 +43,7 @@ const Navbar = () => {
         setData(null);
         router.push("/");
         localStorage.setItem("accessToken", "");
+        localStorage.setItem("refreshToken", "");
       } else {
         const data = await res.json();
         console.error("Logout failed:", data);
@@ -57,11 +58,7 @@ const Navbar = () => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const cookies = document.cookie.split("; ");
-        const tokenCookie = cookies.find((row) =>
-          row.startsWith("accessToken=")
-        );
-        const token = tokenCookie ? tokenCookie.split("=")[1] : null;
+        const token = localStorage.getItem("accessToken");
 
         if (!token) {
           setAuthenticated(false);

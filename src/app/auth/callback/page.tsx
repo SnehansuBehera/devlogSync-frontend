@@ -24,7 +24,7 @@ export default function AuthCallback() {
       const { email, id } = session.user;
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/auth/social`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URI_LOCAL}/api/auth/social`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -82,7 +82,7 @@ export default function ProfileDashboard() {
         { image: imageUrl },
         {
           headers: {
-            Authorization: `Bearer ${token.current}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             "Content-Type": "application/json",
           },
         }
@@ -110,7 +110,6 @@ export default function ProfileDashboard() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-  const token = useRef<string>("");
   const handleKeyDown = async (
     e: React.KeyboardEvent<HTMLInputElement>,
     field: string
@@ -134,7 +133,7 @@ export default function ProfileDashboard() {
         },
         {
           headers: {
-            Authorization: `Bearer ${token.current}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             "Content-Type": "application/json",
           },
         }
@@ -169,13 +168,9 @@ export default function ProfileDashboard() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const cookies = document.cookie.split("; ");
-        const tokenCookie = cookies.find((row) =>
-          row.startsWith("accessToken=")
-        );
-        token.current = tokenCookie ? tokenCookie.split("=")[1] : "";
+        const token = localStorage.getItem("accessToken");
 
-        if (!token.current) {
+        if (!token) {
           setData(null);
           return;
         }
@@ -185,7 +180,7 @@ export default function ProfileDashboard() {
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${token.current}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -225,7 +220,8 @@ export default function ProfileDashboard() {
   }, [data?.user]);
   const handlePasswordChange = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!token.current) {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
       toast.error("You must be logged in.");
       return;
     }
@@ -235,7 +231,7 @@ export default function ProfileDashboard() {
         form,
         {
           headers: {
-            Authorization: `Bearer ${token.current}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -260,7 +256,8 @@ export default function ProfileDashboard() {
   };
   const handlePasswordSet = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!token.current) {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
       toast.error("You must be logged in.");
       return;
     }
@@ -270,7 +267,7 @@ export default function ProfileDashboard() {
         form,
         {
           headers: {
-            Authorization: `Bearer ${token.current}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }

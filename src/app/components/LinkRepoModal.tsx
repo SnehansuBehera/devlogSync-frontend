@@ -9,7 +9,7 @@ import { linkRepository } from "@/store/thunks/githubThunks";
 interface LinkRepositoryModalProps {
   open: boolean;
   onClose: () => void;
-  projectId: string;
+  projectId: number;
 }
 
 const LinkRepositoryModal = ({

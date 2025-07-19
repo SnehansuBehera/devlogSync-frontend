@@ -23,8 +23,16 @@ export const authUser = createAsyncThunk<User, AuthThunkArgs>(
       console.log("Login response JSON:", data);
 
       if (!res.ok) return rejectWithValue(data.message || "Auth failed");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
 
-      return data.user as User;
+            return {
+        ...data.user,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      } as User;
     } catch (err: unknown) {
         if (err instanceof Error) {
         console.error("Auth error:", err.message);

@@ -6,7 +6,8 @@ export interface UserState extends User {
   loading: boolean;
   error?: string;
   forgotPasswordEmail: string | null;
-    resetSuccess: string | null;
+  resetSuccess: string | null;
+  refreshToken?: string;
 
 }
 
@@ -18,6 +19,7 @@ const initialState: UserState = {
   username: "",
   image: "",
   accessToken: "",
+  refreshToken: "",
   githubToken: "",
   githubUsername: "",
   password: "",
@@ -34,6 +36,7 @@ const userSlice = createSlice({
     clearUser: () => {
       if (typeof window !== "undefined") {
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       }
       return { ...initialState };
     },
@@ -51,10 +54,6 @@ const userSlice = createSlice({
         Object.assign(state, action.payload);
         state.loading = false;
         state.error = undefined;
-
-        if (typeof window !== "undefined" && action.payload.accessToken) {
-          localStorage.setItem("accessToken", action.payload.accessToken);
-        }
       })
       .addCase(authUser.rejected, (state, action) => {
         state.loading = false;

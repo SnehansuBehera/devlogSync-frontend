@@ -5,8 +5,9 @@ import { FaPlus } from "react-icons/fa6";
 import { MdOutlineDateRange } from "react-icons/md";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import toast from "react-hot-toast";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { createProject, fetchProjects } from "@/store/thunks/projectThunks";
 
 const tabs = [
   { label: "Todo", count: 8 },
@@ -29,89 +30,32 @@ export default function ProjectPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [activeTab, setActiveTab] = useState("Todo");
-  const [projects, setProjects] = useState<ProjectType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const modalRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  const token = useRef<string>("");
-  const fetchProjects = async (token: string) => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/user-projects`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        toast.error(result.message || "Failed to fetch");
-      }
-      setProjects(result.data);
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Unknown error");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const dispatch = useAppDispatch();
+  const { projects, loading, error } = useAppSelector((state) => state.project);
 
   const addnewproject = async () => {
-    try {
-      setError("");
-      setLoading(true);
-      if (!name || !description) {
-        toast.error("Provide all details");
-      }
-      console.log(token);
-      const projectRes = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/create-project`,
-        { name, description },
-        {
-          headers: {
-            Authorization: `Bearer ${token.current}`,
-          },
-        }
-      );
-      if (projectRes.data.status === 201) {
-        toast.success(projectRes.data.message);
-        setShowModal(false);
-        setName("");
-        setDescription("");
-        fetchProjects(token.current);
-      } else {
-        setError("");
-        toast.error(projectRes.data.message);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Unknown error");
-      }
-    } finally {
-      setLoading(false);
+    if (!name || !description) return toast.error("Provide all details");
+    const resultAction = await dispatch(createProject({ name, description }));
+    if (createProject.fulfilled.match(resultAction)) {
+      toast.success("Project created");
+      setShowModal(false);
+      setName("");
+      setDescription("");
+      dispatch(fetchProjects());
+    } else {
+      toast.error(resultAction.payload || "Creation failed");
     }
   };
   useEffect(() => {
-    const cookies = document.cookie.split("; ");
-    const tokenCookie = cookies.find((row) => row.startsWith("accessToken="));
-    token.current = tokenCookie ? tokenCookie.split("=")[1] : "";
-    if (!token.current) {
-      router.push("/");
-    } else {
-      fetchProjects(token.current);
-    }
-  }, [router]);
+    const token = localStorage.getItem("accessToken");
+    if (!token) return router.push("/");
+    dispatch(fetchProjects());
+  }, [dispatch, router]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -138,22 +82,6 @@ export default function ProjectPage() {
           Projects List <span>📌</span>
         </h1>
         <div className="flex items-center gap-4">
-          {/* Avatars */}
-          {/* <div className="flex -space-x-2">
-            {[...Array(4)].map((_, i) => (
-              <Image
-                key={i}
-                width={32}
-                height={32}
-                src={`/logo-nav.png`}
-                alt={`user-${i}`}
-                className="rounded-full border-2 border-white"
-              />
-            ))}
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 border-2 border-white">
-              +4
-            </div>
-          </div> */}
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 text-xs sm:text-sm bg-white shadow-lg border shadow-zinc-300 px-2 sm:px-4 py-2 rounded-md hover:bg-gray-50"

@@ -3,11 +3,20 @@
 import { getTime } from "@/helper/getTime";
 import axios from "axios";
 import { useRouter, useParams } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { RiGithubLine } from "react-icons/ri";
 import LinkRepositoryModal from "@/app/components/LinkRepoModal";
+import InviteMemberModal from "@/app/components/InviteMemberModal";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchProjectCommits,
+  fetchUnexportedLogs,
+} from "@/store/thunks/githubThunks";
+import { RootState, AppDispatch } from "@/store";
+import { generateSummaryAndSendEmail } from "@/store/thunks/summaryThunks";
+import GridMap from "@/app/components/GridMap";
 
 interface ProjectType {
   id: number;
@@ -37,15 +46,37 @@ interface MemberType {
 }
 
 const Project = () => {
-  const token = useRef<string>("");
   const router = useRouter();
   const params = useParams();
   const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
-
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [exportTime, setExportTime] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const { commits, logs, loading } = useSelector(
+    (state: RootState) => state.github
+  );
   const projectId = params?.id as string;
-
+  console.log(commits);
   const [project, setProject] = useState<ProjectType | null>(null);
   console.log(project);
+
+  const handleExportLog = async () => {
+    if (!projectId) {
+      toast.error("Missing token or project ID");
+      return;
+    }
+
+    dispatch(generateSummaryAndSendEmail({ projectId }))
+      .unwrap()
+      .then(() => {
+        toast.success("Daily report exported & emailed successfully!");
+        dispatch(fetchUnexportedLogs({ projectId }));
+      })
+      .catch((err: string) => {
+        toast.error(err || "Failed to export report");
+      });
+  };
+
   const fetchProjectDetails = async (token: string, projectId: string) => {
     try {
       const res = await axios.get(
@@ -66,17 +97,39 @@ const Project = () => {
       toast.error("Something went wrong while fetching project");
     }
   };
-  useEffect(() => {
-    const cookies = document.cookie.split("; ");
-    const tokenCookie = cookies.find((row) => row.startsWith("accessToken="));
-    token.current = tokenCookie ? tokenCookie.split("=")[1] : "";
 
-    if (!token.current) {
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      setExportTime(currentHour < 19);
+    };
+    checkTime();
+
+    const interval = setInterval(checkTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken") || "";
+    if (!token) {
       router.push("/");
     } else if (projectId) {
-      fetchProjectDetails(token.current, projectId);
+      fetchProjectDetails(token, projectId);
     }
   }, [router, projectId]);
+
+  useEffect(() => {
+    if (projectId) {
+      dispatch(fetchUnexportedLogs({ projectId }));
+    }
+  }, [dispatch, projectId]);
+  useEffect(() => {
+    if (projectId) {
+      const today = new Date().toISOString().split("T")[0];
+      dispatch(fetchProjectCommits({ projectId, date: today }));
+    }
+  }, [dispatch, projectId]);
   return (
     <div className="w-[88%] sm:w-[90%] mx-auto mt-4 px-2 sm:px-5 py-2">
       {/* Main Menu */}
@@ -127,7 +180,10 @@ const Project = () => {
             </button>
 
             {/* Invite Button */}
-            <button className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs md:text-sm font-medium hover:bg-blue-700 transition">
+            <button
+              onClick={() => setIsInviteModalOpen(true)}
+              className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs md:text-sm font-medium hover:bg-blue-700 transition"
+            >
               + Invite Member
             </button>
           </div>
@@ -212,240 +268,133 @@ const Project = () => {
               ))}
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex overflow-x-auto no-scrollbar space-x-4 mb-4">
-              {[
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-              ].map((month) => (
-                <button
-                  key={month}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    month === "Aug"
-                      ? "bg-blue-100 text-blue-800"
-                      : "text-gray-600"
-                  }`}
-                >
-                  {month}
-                </button>
-              ))}
-            </div>
 
-            <div className="mb-2">
-              <p className="text-sm text-gray-600">
-                Issues, merge requests, pushes, and comments
-              </p>
-            </div>
-
-            <div className="flex items-center">
-              <span className="text-sm text-gray-500 mr-2">None</span>
-              <div className="flex space-x-1">
-                <span className="w-2 h-2 bg-gray-300 rounded-full"></span>
-                <span className="w-2 h-2 bg-gray-300 rounded-full"></span>
-                <span className="w-2 h-2 bg-gray-300 rounded-full"></span>
-              </div>
-              <span className="text-sm text-gray-500 ml-2">● ● ● 30+</span>
-            </div>
-          </div>
+          <GridMap projectId={projectId} />
         </div>
 
         {/* Transactions Section */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-lg font-semibold mb-4">Transactions</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold mb-1">View Logs</h2>
+            <button
+              onClick={handleExportLog}
+              disabled={exportTime}
+              className={`rounded-md px-4 py-2 text-white text-sm font-medium transition ${
+                exportTime
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              Export Logs
+            </button>
+          </div>
           <p className="text-sm text-gray-600 mb-4">
-            Lorem ipsum dolor sit amet, consectetur adipis.
+            Your daily loga are availabale here.
           </p>
 
-          <div className="overflow-x-auto">
-            {/* Sticky Table Header */}
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount & Date
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Merchant
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-            </table>
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 className="text-lg font-semibold mb-4">
+              GitHub Commits (Today)
+            </h2>
 
-            {/* Scrollable Table Body */}
-            <div className="max-h-64 overflow-y-auto no-scrollbar">
-              <table className="min-w-full divide-y divide-gray-200">
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {[
-                    {
-                      status: "Completed",
-                      desc: "Visa card **** 4831 Card payment",
-                      amount: "$182.94 Jan 17, 2022",
-                      merchant: "Amazon",
-                    },
-                    {
-                      status: "Completed",
-                      desc: "Mastercard **** 6442 Card payment",
-                      amount: "$99.00 Jan 17, 2022",
-                      merchant: "Facebook",
-                    },
-                    {
-                      status: "Pending",
-                      desc: "Account ****882 Bank payment",
-                      amount: "$249.94 Jan 17, 2022",
-                      merchant: "Netflix",
-                    },
-                    {
-                      status: "Canceled",
-                      desc: "Amex card **** 5666 Card payment",
-                      amount: "$199.24 Jan 17, 2022",
-                      merchant: "Amazon Prime",
-                    },
-                    {
-                      status: "Canceled",
-                      desc: "Amex card **** 5666 Card payment",
-                      amount: "$199.24 Jan 17, 2022",
-                      merchant: "Amazon Prime",
-                    },
-                    {
-                      status: "Canceled",
-                      desc: "Amex card **** 5666 Card payment",
-                      amount: "$199.24 Jan 17, 2022",
-                      merchant: "Amazon Prime",
-                    },
-                    {
-                      status: "Canceled",
-                      desc: "Amex card **** 5666 Card payment",
-                      amount: "$199.24 Jan 17, 2022",
-                      merchant: "Amazon Prime",
-                    },
-                    {
-                      status: "Canceled",
-                      desc: "Amex card **** 5666 Card payment",
-                      amount: "$199.24 Jan 17, 2022",
-                      merchant: "Amazon Prime",
-                    },
-                  ].map((txn, index) => (
-                    <tr key={index}>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            txn.status === "Completed"
-                              ? "bg-green-100 text-green-800"
-                              : txn.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {txn.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {txn.desc}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {txn.amount}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {txn.merchant}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                        **
-                      </td>
+            {loading ? (
+              <p className="text-sm text-gray-500">Loading commits...</p>
+            ) : commits.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No commits found for today.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                {/* Sticky Table Header */}
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Commit Time
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Message
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                </table>
+
+                {/* Scrollable Table Body */}
+                <div className="max-h-64 overflow-y-auto no-scrollbar">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {commits.map((commit) => (
+                        <tr key={commit.id}>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(commit.time).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {commit.message}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
+
           <div className="border-t border-gray-200 my-6"></div>
-
-          {/* Recent Customers Section */}
-          <h2 className="text-lg font-semibold mb-4">Recent Customers</h2>
+          <h2 className="text-lg font-semibold mb-1">Unexported Logs</h2>
           <p className="text-sm text-gray-600 mb-4">
-            Lorem ipsum dolor sit ametis.
+            Your unexported loga are availabale here.
           </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium">Bennie Wilson</h3>
-              <a
-                href="https://www.bennie.wil"
-                className="text-blue-600 text-sm"
-              >
-                lavsonbenn@gmail.com
-              </a>
+          {loading ? (
+            <p className="text-sm text-gray-500">Loading logs...</p>
+          ) : logs?.length === 0 ? (
+            <p className="text-sm text-gray-500">No unexported logs found.</p>
+          ) : (
+            <div className="space-y-3 max-h-64 overflow-y-auto no-scrollbar">
+              {logs?.map((log) => (
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md px-4 py-2"
+                >
+                  <span className="text-sm text-gray-800">
+                    {new Date(log.date).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    Export
+                  </button>
+                </div>
+              ))}
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium">Robert Lane</h3>
-              <a
-                href="https://robertse@gmail.com"
-                className="text-blue-600 text-sm"
-              >
-                robertse@gmail.com
-              </a>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium">Jane Cooper</h3>
-              <a
-                href="https://jnecooper@gmail.com"
-                className="text-blue-600 text-sm"
-              >
-                jnecooper@gmail.com
-              </a>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium">Martin Russell</h3>
-              <a
-                href="https://martinruss@gmail.com"
-                className="text-blue-600 text-sm"
-              >
-                martinruss@gmail.com
-              </a>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium">$11.234 Austin</h3>
-              <a
-                href="https://www.newyork.com"
-                className="text-blue-600 text-sm"
-              >
-                $11.159 NewYork
-              </a>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium">$10.483 Toledo</h3>
-              <a
-                href="https://www.naperville.com"
-                className="text-blue-600 text-sm"
-              >
-                $9.084 Naperville
-              </a>
-            </div>
-          </div>
+          )}
         </div>
       </div>
       {/* Activity Graph Section */}
       <LinkRepositoryModal
         open={isRepoModalOpen}
         onClose={() => setIsRepoModalOpen(false)}
-        projectId={projectId}
+        projectId={parseInt(projectId, 10)}
       />
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded shadow p-4 w-[90%] sm:w-[400px]">
+            <InviteMemberModal projectId={parseInt(projectId, 10)} />
+            <button
+              onClick={() => setIsInviteModalOpen(false)}
+              className="text-sm text-gray-500 mt-2 hover:underline"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
