@@ -22,8 +22,16 @@ export default function ClientAuthHandler() {
             },
           }
         );
+        const data = await res.json();
 
         if (res.ok) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              image: data.user.image,
+              username: data.user.username,
+            })
+          );
           if (pathname === "/login" || pathname === "/register") {
             router.replace("/dashboard");
           }

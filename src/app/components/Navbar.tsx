@@ -59,7 +59,23 @@ const Navbar = () => {
     const getUser = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-
+        const userString = localStorage.getItem("user");
+        let image, username;
+        if (userString) {
+          try {
+            const userObj = JSON.parse(userString);
+            image = userObj.image;
+            username = userObj.username;
+          } catch {
+            image = undefined;
+            username = undefined;
+          }
+        }
+        if (image && username) {
+          setAuthenticated(true);
+          setData({ user: { image } });
+          return;
+        }
         if (!token) {
           setAuthenticated(false);
           setData(null);
@@ -78,9 +94,15 @@ const Navbar = () => {
 
         if (userRes.ok) {
           const userData = await userRes.json();
-          console.log("User image:", userData.user?.image);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              image: userData.user.image,
+              username: userData.user.username,
+            })
+          );
           setAuthenticated(true);
-          setData(userData);
+          setData({ user: { image: userData.user.image } });
         } else {
           setAuthenticated(false);
           setData(null);
