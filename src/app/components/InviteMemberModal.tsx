@@ -16,7 +16,7 @@ export default function InviteMemberModal({
     console.log(projectId);
     try {
       await axios.post(
-        "https://devlogsync.onrender.com/api/invite",
+        `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/invite`,
         { email, projectId },
         {
           headers: {

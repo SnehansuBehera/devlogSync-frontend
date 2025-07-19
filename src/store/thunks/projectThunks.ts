@@ -68,3 +68,23 @@ export const createProject = createAsyncThunk<
     return thunkAPI.rejectWithValue("Unknown error");
   }
 });
+
+export const fetchProjectById = createAsyncThunk(
+  "project/fetchDetails",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken") || "";
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/project/${projectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return res.data.data;
+    } catch {
+      return rejectWithValue("Failed to fetch project details.");
+    }
+  }
+);

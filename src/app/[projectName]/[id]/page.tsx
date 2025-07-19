@@ -1,7 +1,7 @@
 "use client";
 
 import { getTime } from "@/helper/getTime";
-import axios from "axios";
+// import axios from "axios";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -17,33 +17,34 @@ import {
 import { RootState, AppDispatch } from "@/store";
 import { generateSummaryAndSendEmail } from "@/store/thunks/summaryThunks";
 import GridMap from "@/app/components/GridMap";
+import { fetchProjectById } from "@/store/thunks/projectThunks";
 
-interface ProjectType {
-  id: number;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: number;
-  members: MemberType[];
-}
+// interface ProjectType {
+//   id: number;
+//   name: string;
+//   description: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   userId: number;
+//   members: MemberType[];
+// }
 
-interface MemberType {
-  id: number;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  image: string | null;
-  isActive: boolean;
-  isAdmin: boolean;
-  isVerified: boolean;
-  createdAt: string;
-  accessToken: string;
-  githubToken: string | null;
-  githubUsername: string | null;
-}
+// interface MemberType {
+//   id: number;
+//   email: string;
+//   password: string;
+//   firstName: string;
+//   lastName: string;
+//   username: string;
+//   image: string | null;
+//   isActive: boolean;
+//   isAdmin: boolean;
+//   isVerified: boolean;
+//   createdAt: string;
+//   accessToken: string;
+//   githubToken: string | null;
+//   githubUsername: string | null;
+// }
 
 const Project = () => {
   const router = useRouter();
@@ -52,13 +53,15 @@ const Project = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [exportTime, setExportTime] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+  const { currentProject } = useSelector((state: RootState) => state.project);
+
   const { commits, logs, loading } = useSelector(
     (state: RootState) => state.github
   );
   const projectId = params?.id as string;
-  console.log(commits);
-  const [project, setProject] = useState<ProjectType | null>(null);
-  console.log(project);
+  // console.log(commits);
+  // const [project, setProject] = useState<ProjectType | null>(null);
+  // console.log(project);
 
   const handleExportLog = async () => {
     if (!projectId) {
@@ -77,26 +80,26 @@ const Project = () => {
       });
   };
 
-  const fetchProjectDetails = async (token: string, projectId: string) => {
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/project/${projectId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (res.data && res.data.data) {
-        setProject(res.data.data);
-      } else {
-        toast.error("Project not found");
-      }
-    } catch (error) {
-      console.error("Fetch error:", error);
-      toast.error("Something went wrong while fetching project");
-    }
-  };
+  // const fetchProjectDetails = async (token: string, projectId: string) => {
+  //   try {
+  //     const res = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/project/${projectId}`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     if (res.data && res.data.data) {
+  //       setProject(res.data.data);
+  //     } else {
+  //       toast.error("Project not found");
+  //     }
+  //   } catch (error) {
+  //     console.error("Fetch error:", error);
+  //     toast.error("Something went wrong while fetching project");
+  //   }
+  // };
 
   useEffect(() => {
     const checkTime = () => {
@@ -111,43 +114,44 @@ const Project = () => {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken") || "";
-    if (!token) {
-      router.push("/");
-    } else if (projectId) {
-      fetchProjectDetails(token, projectId);
-    }
-  }, [router, projectId]);
+    const initializeProjectData = async () => {
+      const token = localStorage.getItem("accessToken") || "";
+      if (!token) {
+        router.push("/");
+        return;
+      }
 
-  useEffect(() => {
-    if (projectId) {
-      dispatch(fetchUnexportedLogs({ projectId }));
-    }
-  }, [dispatch, projectId]);
-  useEffect(() => {
-    if (projectId) {
+      if (!projectId) return;
+      dispatch(fetchProjectById(projectId));
       const today = new Date().toISOString().split("T")[0];
       dispatch(fetchProjectCommits({ projectId, date: today }));
-    }
-  }, [dispatch, projectId]);
+      dispatch(fetchUnexportedLogs({ projectId }));
+    };
+
+    initializeProjectData();
+  }, [projectId, router, dispatch]);
+
   return (
     <div className="w-[88%] sm:w-[90%] mx-auto mt-4 px-2 sm:px-5 py-2">
       {/* Main Menu */}
       <div className="flex justify-between items-center">
         <h2 className="text-xs font-semibold text-zinc-500">
-          Project &gt; <span className="text-zinc-700">{project?.name}</span>
+          Project &gt;{" "}
+          <span className="text-zinc-700">{currentProject?.name}</span>
         </h2>
         <span className="text-xs text-gray-500">
-          Last update on {getTime(project?.updatedAt || "")}
+          Last update on {getTime(currentProject?.updatedAt || "")}
         </span>
       </div>
       {/* Header Section */}
       <div className="mt-2">
-        <h1 className="text-2xl font-bold text-gray-800">{project?.name}</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          {currentProject?.name}
+        </h1>
         <div className="flex justify-between items-center mt-2">
           {/* Avatars */}
           <div className="flex items-center space-x-[-10px]">
-            {project?.members?.slice(0, 3).map((member, index) => (
+            {currentProject?.members?.slice(0, 3).map((member, index) => (
               <Image
                 key={member.id}
                 src={
@@ -161,9 +165,9 @@ const Project = () => {
                 height={100}
               />
             ))}
-            {project?.members && project.members.length > 3 && (
+            {currentProject?.members && currentProject.members.length > 3 && (
               <div className="w-8 h-8 rounded-full bg-gray-300 text-xs flex items-center justify-center border-2 border-white z-0">
-                +{project.members.length - 5}
+                +{currentProject.members.length - 5}
               </div>
             )}
           </div>

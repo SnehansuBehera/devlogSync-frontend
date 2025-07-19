@@ -24,7 +24,7 @@ export default function AuthCallback() {
       const { email, id } = session.user;
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URI_LOCAL}/api/auth/social`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/auth/social`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -47,7 +47,8 @@ export default function AuthCallback() {
         console.error(result);
         return;
       }
-      localStorage.setItem("accessToken", result.user.accessToken);
+      localStorage.setItem("accessToken", result.accessToken);
+      localStorage.setItem("refreshToken", result.refreshToken);
       router.push("/dashboard");
     })();
   }, [router]);

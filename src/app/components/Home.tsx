@@ -9,8 +9,12 @@ const LandingPage = () => {
   const router = useRouter();
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem("token");
-      setAuthenticated(!!token);
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        setAuthenticated(true);
+      } else {
+        setAuthenticated(false);
+      }
     };
     checkAuth();
   }, []);
