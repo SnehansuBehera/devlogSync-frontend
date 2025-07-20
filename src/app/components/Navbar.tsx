@@ -44,6 +44,7 @@ const Navbar = () => {
         router.push("/");
         localStorage.setItem("accessToken", "");
         localStorage.setItem("refreshToken", "");
+        localStorage.setItem("user", "");
       } else {
         const data = await res.json();
         console.error("Logout failed:", data);
@@ -59,6 +60,11 @@ const Navbar = () => {
     const getUser = async () => {
       try {
         const token = localStorage.getItem("accessToken");
+        if (!token) {
+          setAuthenticated(false);
+          setData(null);
+          return;
+        }
         const userString = localStorage.getItem("user");
         let image, username;
         if (userString) {
@@ -74,11 +80,6 @@ const Navbar = () => {
         if (image && username) {
           setAuthenticated(true);
           setData({ user: { image } });
-          return;
-        }
-        if (!token) {
-          setAuthenticated(false);
-          setData(null);
           return;
         }
 

@@ -221,27 +221,33 @@ export default function SignupPage() {
         <div className="max-w-md mx-auto">
           <div className="bg-white/10 backdrop-blur-md p-6 rounded-xl mb-6">
             <p className="text-xl font-medium">
-              “Basement is surprisingly handy for keeping all my business stuff
-              in one place.”
+              “DevLogSync makes it effortless to keep track of my daily
+              development work. Everything I’ve done all synced and summarized
+              automatically.”
             </p>
             <div className="flex items-center mt-4 gap-3 justify-center">
               <Image
-                src="/vercel.svg"
-                className="w-10 h-10 rounded-full border"
+                src="/logo-nav.png"
+                className="w-10 h-10 rounded-full"
                 alt="avatar"
                 width={50}
                 height={50}
               />
-              <div className="text-left">
-                <p className="font-medium">David Miller</p>
-                <p className="text-sm text-white/70">E-commerce Specialist</p>
+              <div
+                onClick={() => router.push("https://github.com/SnehansuBehera")}
+                className="text-left cursor-pointer"
+              >
+                <p className="font-medium">Snehansu Behera</p>
+                <p className="text-sm text-white/70">FullStack Developer</p>
               </div>
             </div>
           </div>
           <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl">
             <p className="text-sm font-semibold tracking-wider">GROWTH</p>
             <p className="text-2xl font-bold mt-1">+21.35%</p>
-            <p className="text-sm text-white/70">last month</p>
+            <p className="text-sm text-white/70">
+              Productivity boost last month
+            </p>
           </div>
         </div>
       </div>

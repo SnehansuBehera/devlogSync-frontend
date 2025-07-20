@@ -63,13 +63,13 @@ const Project = () => {
   // const [project, setProject] = useState<ProjectType | null>(null);
   // console.log(project);
 
-  const handleExportLog = async () => {
+  const handleExportLog = async (date: string) => {
     if (!projectId) {
       toast.error("Missing token or project ID");
       return;
     }
-
-    dispatch(generateSummaryAndSendEmail({ projectId }))
+    toast.error(date);
+    dispatch(generateSummaryAndSendEmail({ projectId, date }))
       .unwrap()
       .then(() => {
         toast.success("Daily report exported & emailed successfully!");
@@ -281,7 +281,9 @@ const Project = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold mb-1">View Logs</h2>
             <button
-              onClick={handleExportLog}
+              onClick={() =>
+                handleExportLog(new Date().toISOString().split("T")[0])
+              }
               disabled={exportTime}
               className={`rounded-md px-4 py-2 text-white text-sm font-medium transition ${
                 exportTime
@@ -371,7 +373,14 @@ const Project = () => {
                       day: "numeric",
                     })}
                   </span>
-                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                  <button
+                    onClick={() =>
+                      handleExportLog(
+                        new Date(log.date).toISOString().split("T")[0]
+                      )
+                    }
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  >
                     Export
                   </button>
                 </div>

@@ -2,21 +2,21 @@ export default function About() {
   const features = [
     {
       icon: "📅",
-      title: "Free transfers",
+      title: "Automated Work Logs",
       description:
-        "Create scheduled experiences and automated repeat payments by scheduling internal transfers.",
+        "Capture your daily contributions across GitHub — auto-summarized with AI and ready to review or export.",
     },
     {
       icon: "🏛️",
-      title: "Multiple accounts",
+      title: "Context-Rich Projects",
       description:
-        "Run your operations with cash from your account and projected profits better based on your accounts.",
+        "Sync activities from multiple platforms into a single, unified timeline — giving you insights into what matters most across all your tasks.",
     },
     {
       icon: "🛡️",
-      title: "Unmatched security",
+      title: "Privacy-First Security",
       description:
-        "Remotely manage user finances with compliance-grade MFA, user tracking, and account-level access.",
+        "Securely manage developer data with token-based access, granular control, and on-device session tracking — without compromising performance.",
     },
   ];
 
@@ -32,12 +32,12 @@ export default function About() {
               Future forward
             </p>
             <h2 className="text-3xl md:text-5xl font-bold mt-2">
-              Experience that grows with your scale.
+              Experience that grows with your workflow.
             </h2>
           </div>
           <p className="text-gray-600 mt-4 max-w-2xl mx-auto ">
-            Design a financial operations system that works for your business
-            and streamlined cash flow management
+            Design a developer operations system that evolves with your team and
+            simplifies work log management.
           </p>
         </div>
 

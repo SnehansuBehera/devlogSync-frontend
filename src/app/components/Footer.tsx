@@ -16,23 +16,29 @@ export default function Footer() {
             />
             <span className="text-lg font-semibold text-black">DevlogSync</span>
           </div>
-          <p className="text-gray-600 text-sm w-40">
-            DevlogSync empowers teams to transform raw data into clear,
-            compelling visuals — making insights easier to share, understand,
-            and act on.
+          <p className="text-gray-600 text-xs md:text-sm w-40">
+            DevlogSync empowers developers and teams to automate daily work
+            logs, integrate tools, and gain clarity with AI-generated summaries
+            — all in one place.
           </p>
           {/* Social Icons */}
           <div className="flex gap-4 text-gray-600 text-xl sm:mt-8">
-            <a href="#" aria-label="X">
+            <a href="https://x.com/SnehansuBehera1" aria-label="X">
               <FaXTwitter />
             </a>
-            <a href="#" aria-label="Instagram">
+            <a
+              href="https://www.instagram.com/snehansu_08/"
+              aria-label="Instagram"
+            >
               <FaInstagram />
             </a>
-            <a href="#" aria-label="LinkedIn">
+            <a
+              href="https://www.linkedin.com/in/snehansu-behera-314b17258/"
+              aria-label="LinkedIn"
+            >
               <FaLinkedin />
             </a>
-            <a href="#" aria-label="GitHub">
+            <a href="https://github.com/SnehansuBehera" aria-label="GitHub">
               <FaGithub />
             </a>
           </div>

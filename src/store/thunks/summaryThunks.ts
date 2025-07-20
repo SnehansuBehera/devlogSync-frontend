@@ -8,13 +8,13 @@ interface SummaryResponse {
 
 export const generateSummaryAndSendEmail = createAsyncThunk<
   SummaryResponse,
-  { projectId: string },
+  { projectId: string, date: string },
   { rejectValue: string }
->("summary/generateAndEmail", async ({ projectId }, thunkAPI) => {
+>("summary/generateAndEmail", async ({ projectId, date }, thunkAPI) => {
   try {
     const summaryRes = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/user/aiSummary?projectId=${projectId}`,
-      {},
+      {date},
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -27,7 +27,7 @@ export const generateSummaryAndSendEmail = createAsyncThunk<
 
     await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_URI}/api/summary/send-report/${projectId}`,
-      {},
+      {date},
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
