@@ -3,7 +3,8 @@ import axios from "axios";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
-  const token = req.cookies.get("accessToken")?.value || "";
+  const state = req.nextUrl.searchParams.get("state");
+  const token = state || "";
   if (!code) {
     return NextResponse.redirect(`https://devlogsync.vercel.app/profile?error=OAuth failed`);
   }

@@ -67,7 +67,12 @@ export default function ProfileDashboard() {
     return data.secure_url;
   };
   const connectToGithub = () => {
-    const githubAuthURL = `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID}&scope=user:email`;
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      toast.error("You must be logged in.");
+      return;
+    }
+    const githubAuthURL = `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID}&scope=repo,admin:repo_hook,user:email&state=${token}`;
 
     window.location.href = githubAuthURL;
   };

@@ -62,7 +62,7 @@ export const linkRepository = createAsyncThunk(
     "github/linkRepository",
     async ({ repoUrl, repoName, projectId }: { repoUrl: string; repoName: string; projectId: number }, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URI}/api/addGithub`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URI_LOCAL}/api/addGithub`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
